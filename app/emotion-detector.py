@@ -18,16 +18,38 @@ emotion_mappings = {
 }
 
 
-def extract_audio_features(file):
+def extract_audio_features(file, chroma, mfcc, mel):
     with sf.SoundFile(file) as sound_file:
         X = sound_file.read(dtype="float32")
-        print(X)
+        sample_rate = sound_file.samplerate
+        result = np.array([])
+
+        # 12 chromas of musical octives
+        if chroma:
+            stft = np.abs(lb.stft(X))
+            chroma = np.mean(lb.feature.chroma_stft(
+                S=stft, sr=sample_rate).T, axis=0)
+            result = np.hstack((result, chroma))
+
+        # frequency and time characteristics
+        if mfcc:
+            mfccs = np.mean(lb.feature.mfcc(
+                y=X, sr=sample_rate, n_mfcc=40).T, axis=0)
+            result = np.hstack((result, mfccs))
+
+        # spectrogram of the frequencies in mel scale (scale of pitches)
+        if mel:
+            mel = np.mean(lb.feature.melspectrogram(
+                y=X, sr=sample_rate).T, axis=0)
+            result = np.hstack((result, mel))
+
+    return result
 
 
 def load_audio_data():
 
-    for file in glob.glob("./data/Actor_*/*.wav"):
-        print(file)
+    for file in glob.glob("../data/Actor_*/*.wav"):
+        extract_audio_features(file, chroma=True, mfcc=True, mel=True)
 
 
 def main():
