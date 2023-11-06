@@ -6,6 +6,8 @@ import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, classification_report
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score
 
 EMOTION_MAPPINGS = {
     '01': 'neutral',
@@ -90,16 +92,24 @@ def load_and_augment_data(test_size=0.25, n_steps=0.5, rate=1.25):
 def main():
     X_train, X_test, y_train, y_test = load_and_augment_data()
 
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
     model = MLPClassifier(alpha=0.02, batch_size=256, epsilon=1e-08,
                           hidden_layer_sizes=(400, ), learning_rate='adaptive', max_iter=1000)
-    model.fit(X_train, y_train)
+    model.fit(X_train_scaled, y_train)
 
     filename = 'model.sav'
     pickle.dump(model, open(filename, 'wb'))
 
-    y_pred = model.predict(X_test)
+    y_pred = model.predict(X_test_scaled)
 
     print(f'Accuracy: {round(accuracy_score(y_test, y_pred) * 100, 2)}%')
+
+    scores = cross_val_score(model, X_train_scaled, y_train, cv=5)
+    print(f"Cross-validated scores: {scores}")
+
     print(classification_report(y_true=y_test, y_pred=y_pred))
 
 
