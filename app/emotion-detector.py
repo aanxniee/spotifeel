@@ -51,7 +51,7 @@ def extract_audio_features(file, chroma, mfcc, mel):
     return result
 
 
-def load_audio_data(test_size=0.1):
+def load_audio_data(test_size=0.25):
     x, y = [], []
     for file in glob.glob("../data/Actor_*/*.wav"):
         file_name = os.path.basename(file)
@@ -75,8 +75,8 @@ def main():
     X_train, X_test, y_train, y_test = load_audio_data()
     print(f'Features extracted: {X_train.shape[1]}')
 
-    model = MLPClassifier(alpha=0.01, batch_size=256, epsilon=1e-08,
-                          hidden_layer_sizes=(200,), learning_rate='adaptive', max_iter=1000)
+    model = MLPClassifier(alpha=0.02, batch_size=256, epsilon=1e-08,
+                          hidden_layer_sizes=(400,), learning_rate='adaptive', max_iter=1000)
     model.fit(X_train, y_train)
 
     filename = 'model.sav'
