@@ -97,7 +97,7 @@ def main():
     X_test_scaled = scaler.transform(X_test)
 
     model = MLPClassifier(alpha=0.02, batch_size=256, epsilon=1e-08,
-                          hidden_layer_sizes=(400, ), learning_rate='adaptive', max_iter=1000)
+                          hidden_layer_sizes=(400, 200, 100), learning_rate='adaptive', max_iter=1000)
     model.fit(X_train_scaled, y_train)
 
     filename = 'model.sav'
