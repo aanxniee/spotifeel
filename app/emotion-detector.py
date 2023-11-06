@@ -6,6 +6,8 @@ import os
 import glob
 import pickle
 from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score, classification_report
 
 EMOTION_MAPPINGS = {
     '01': 'neutral',
@@ -70,7 +72,19 @@ def load_audio_data(test_size=0.1):
 
 
 def main():
-    load_audio_data()
+    X_train, X_test, y_train, y_test = load_audio_data()
+    print(f'Features extracted: {X_train.shape[1]}')
+
+    model = MLPClassifier(alpha=0.01, batch_size=256, epsilon=1e-08,
+                          hidden_layer_sizes=(200,), learning_rate='adaptive', max_iter=1000)
+    model.fit(X_train, y_train)
+
+    filename = 'model.sav'
+    pickle.dump(model, open(filename, 'wb'))
+
+    y_pred = model.predict(X_test)
+    print(f'Accuracy: {round(accuracy_score(y_test, y_pred) * 100, 2)}%')
+    print(classification_report(y_true=y_test, y_pred=y_pred))
 
 
 if __name__ == '__main__':
