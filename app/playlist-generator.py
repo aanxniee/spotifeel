@@ -65,17 +65,23 @@ def analyze_top_artists(sp):
 
 def analyze_top_tracks(sp, top_artists_uri):
     print('-----Analyzing Top Tracks-----')
-    top_tracks_name = []
-    top_tracks_uri = []
-    for artist in top_artists_uri:
-        top_tracks_all_data = sp.artist_top_tracks(artist)
-        top_tracks_data = top_tracks_all_data['tracks']
-        for track in top_tracks_data:
-            top_tracks_name.append(track['name'])
-            top_tracks_uri.append(track['uri'])
+    top_tracks = set()
 
+    def fetch_tracks_data(artist_uri):
+        try:
+            top_tracks_data = sp.artist_top_tracks(artist_uri)['tracks']
+            for track in top_tracks_data:
+                top_tracks.add((track['name'], track['uri']))
+        except Exception as e:
+            print(f"Error fetching top tracks for artist {artist_uri}: {e}")
+
+    # use threading to fetch tracks data in parallel
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(fetch_tracks_data, top_artists_uri)
+
+    top_tracks_name, top_tracks_uri = zip(*top_tracks)
     print(f'Found {len(top_tracks_name)} tracks: {top_tracks_name}')
-    return top_tracks_uri
+    return list(top_tracks_uri)
 
 
 if __name__ == '__main__':
