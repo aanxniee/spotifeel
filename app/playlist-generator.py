@@ -4,6 +4,7 @@ import sys
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from spotipy import util
+import concurrent.futures
 
 load_dotenv()
 
@@ -33,27 +34,33 @@ def authenticate_token():
 
 def analyze_top_artists(sp):
     print('-----Analyzing Top Artists-----')
-    top_artists_name = []
-    top_artists_uri = []
+    top_artists = set()
 
-    ranges = ['short_term', 'medium_term', 'long_term']
-    for range in ranges:
-        top_artists_all_data = sp.current_user_top_artists(
-            limit=50, time_range=range)
-        top_artists_data = top_artists_all_data['items']
-        for artist in top_artists_data:
-            top_artists_name.append(artist['name'])
-            top_artists_uri.append(artist['uri'])
+    def fetch_artist_data(time_range):
+        try:
+            top_artists_data = sp.current_user_top_artists(
+                limit=50, time_range=time_range)['items']
+            for artist in top_artists_data:
+                top_artists.add((artist['name'], artist['uri']))
+        except Exception as e:
+            print(f"Error fetching top artists for {time_range}: {e}")
 
-    followed_artists_all_data = sp.current_user_followed_artists(limit=50)
-    followed_artists_data = followed_artists_all_data['artists']
-    for artist in followed_artists_data['items']:
-        if artist['name'] not in top_artists_name:
-            top_artists_name.append(artist['name'])
-            top_artists_uri.append(artist['uri'])
+    # use threading to fetch artist data in parallel
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(fetch_artist_data, [
+                     'short_term', 'medium_term', 'long_term'])
 
+    try:
+        followed_artists_data = sp.current_user_followed_artists(limit=50)[
+            'artists']['items']
+        for artist in followed_artists_data:
+            top_artists.add((artist['name'], artist['uri']))
+    except Exception as e:
+        print(f"Error fetching followed artists: {e}")
+
+    top_artists_name, top_artists_uri = zip(*top_artists)
     print(f'Found {len(top_artists_name)} artists: {top_artists_name}')
-    return top_artists_uri
+    return list(top_artists_uri)
 
 
 def analyze_top_tracks(sp, top_artists_uri):
