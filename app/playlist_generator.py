@@ -1,9 +1,12 @@
 from dotenv import load_dotenv
 import os
+import random
 import sys
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from spotipy import util
+from utils.mood_profiles import MOOD_PROFILES
+
 import concurrent.futures
 
 load_dotenv()
@@ -36,7 +39,8 @@ def analyze_top_artists(sp):
     print('-----Analyzing Top Artists-----')
     top_artists = set()
 
-    def fetch_artist_data(time_range):
+    # fetch top artists
+    def fetch_top_artists(time_range):
         try:
             top_artists_data = sp.current_user_top_artists(
                 limit=50, time_range=time_range)['items']
@@ -47,9 +51,10 @@ def analyze_top_artists(sp):
 
     # use threading to fetch artist data in parallel
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(fetch_artist_data, [
+        executor.map(fetch_top_artists, [
                      'short_term', 'medium_term', 'long_term'])
 
+    # fetch followed artists
     try:
         followed_artists_data = sp.current_user_followed_artists(limit=50)[
             'artists']['items']
@@ -84,9 +89,28 @@ def analyze_top_tracks(sp, top_artists_uri):
     return list(top_tracks_uri)
 
 
+def select_tracks(sp, top_tracks_uri):
+    print('-----Selecting tracks-----')
+    mood = os.getenv("MOOD")
+
+    tracks_selected = []
+    random.shuffle(top_tracks_uri)
+    for track in top_tracks_uri[0:100]:
+        track_all_data = sp.audio_features(track)
+        for track_data in track_all_data:
+            try:
+                if all(MOOD_PROFILES[mood][feature][0] <= track_data[feature] <= MOOD_PROFILES[mood][feature][1] for feature in MOOD_PROFILES[mood]):
+                    tracks_selected.append(track_data['uri'])
+            except KeyError:
+                pass
+    return tracks_selected
+
+
 if __name__ == '__main__':
     token = create_token('')
     sp = authenticate_token()
 
     top_artists = analyze_top_artists(sp)
     top_tracks = analyze_top_tracks(sp, top_artists)
+    tracks = select_tracks(sp, top_tracks)
+    print(tracks)
