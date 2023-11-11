@@ -89,21 +89,47 @@ def analyze_top_tracks(sp, top_artists_uri):
     return list(top_tracks_uri)
 
 
-def select_tracks(sp, top_tracks_uri):
+def select_tracks(sp, top_tracks_uri, max_tracks=500):
     print('-----Selecting tracks-----')
     mood = os.getenv("MOOD")
-
-    tracks_selected = []
+    selected_tracks = []
     random.shuffle(top_tracks_uri)
-    for track in top_tracks_uri[0:100]:
-        track_all_data = sp.audio_features(track)
-        for track_data in track_all_data:
-            try:
-                if all(MOOD_PROFILES[mood][feature][0] <= track_data[feature] <= MOOD_PROFILES[mood][feature][1] for feature in MOOD_PROFILES[mood]):
-                    tracks_selected.append(track_data['uri'])
-            except KeyError:
-                pass
-    return tracks_selected
+
+    for i in range(0, min(len(top_tracks_uri), max_tracks), 50):
+        batch = top_tracks_uri[i:i+50]
+        try:
+            tracks_features = sp.audio_features(batch)
+        except Exception as e:
+            print(f"Error fetching audio features: {e}")
+            continue
+
+        for track_data in tracks_features:
+            if track_data:
+                score = sum(1 for feature in MOOD_PROFILES[mood] if MOOD_PROFILES[mood]
+                            [feature][0] <= track_data[feature] <= MOOD_PROFILES[mood][feature][1])
+                if score >= len(MOOD_PROFILES[mood]) / 2:
+                    selected_tracks.append(track_data['uri'])
+
+    return selected_tracks
+
+
+def create_playlist(sp, selected_tracks):
+    if not selected_tracks:
+        print("No tracks selected for the playlist.")
+        return None
+
+    print('-----Creating Playlist-----')
+    user_id = sp.current_user()['id']
+    playlist_name = os.getenv("MOOD") + ' playlist'
+
+    try:
+        playlist_data = sp.user_playlist_create(user_id, playlist_name)
+        sp.user_playlist_add_tracks(
+            user_id, playlist_data['id'], selected_tracks[0:30])
+        return playlist_data['external_urls']['spotify']
+    except Exception as e:
+        print(f"Error creating playlist: {e}")
+        return None
 
 
 if __name__ == '__main__':
@@ -113,4 +139,5 @@ if __name__ == '__main__':
     top_artists = analyze_top_artists(sp)
     top_tracks = analyze_top_tracks(sp, top_artists)
     tracks = select_tracks(sp, top_tracks)
-    print(tracks)
+    playlist = create_playlist(sp, tracks)
+    print(playlist)
