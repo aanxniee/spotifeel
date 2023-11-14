@@ -3,7 +3,6 @@ import os
 import random
 import sys
 import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
 from spotipy import util
 from utils.mood_profiles import MOOD_PROFILES
 
@@ -21,7 +20,6 @@ def create_token(username):
     token = util.prompt_for_user_token(
         username, scope, client_id=client_id, client_secret=client_secret, redirect_uri=redirect_uri)
     os.environ['SPOTIFY_TOKEN'] = token
-    return token
 
 
 def authenticate_token():
@@ -89,9 +87,8 @@ def analyze_top_tracks(sp, top_artists_uri):
     return list(top_tracks_uri)
 
 
-def select_tracks(sp, top_tracks_uri, max_tracks=500):
+def select_tracks(sp, mood, top_tracks_uri, max_tracks=500):
     print('-----Selecting tracks-----')
-    mood = os.getenv("MOOD")
     selected_tracks = []
     random.shuffle(top_tracks_uri)
 
@@ -113,14 +110,19 @@ def select_tracks(sp, top_tracks_uri, max_tracks=500):
     return selected_tracks
 
 
-def create_playlist(sp, selected_tracks):
+def create_playlist(sp, mood):
+
+    top_artists = analyze_top_artists(sp)
+    top_tracks = analyze_top_tracks(sp, top_artists)
+    selected_tracks = select_tracks(sp, mood, top_tracks)
+
     if not selected_tracks:
         print("No tracks selected for the playlist.")
         return None
 
     print('-----Creating Playlist-----')
     user_id = sp.current_user()['id']
-    playlist_name = os.getenv("MOOD") + ' playlist'
+    playlist_name = mood + ' playlist'
 
     try:
         playlist_data = sp.user_playlist_create(user_id, playlist_name)
@@ -130,14 +132,3 @@ def create_playlist(sp, selected_tracks):
     except Exception as e:
         print(f"Error creating playlist: {e}")
         return None
-
-
-if __name__ == '__main__':
-    token = create_token('')
-    sp = authenticate_token()
-
-    top_artists = analyze_top_artists(sp)
-    top_tracks = analyze_top_tracks(sp, top_artists)
-    tracks = select_tracks(sp, top_tracks)
-    playlist = create_playlist(sp, tracks)
-    print(playlist)

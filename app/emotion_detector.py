@@ -115,3 +115,9 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+def predict_mood(audio_features):
+    model = pickle.load(open("model.sav", "rb"))
+    prediction = model.predict([audio_features])
+    return prediction[0]
