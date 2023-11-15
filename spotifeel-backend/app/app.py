@@ -3,7 +3,6 @@ from flask_cors import CORS
 import os
 import speech_recognition as sr
 import librosa as lb
-import pickle
 from werkzeug.utils import secure_filename
 import emotion_detector
 import playlist_generator
@@ -27,7 +26,6 @@ def main():
         return jsonify({"error": "No file selected"}), 400
 
     if file:
-        # Ensure the directory exists
         audio_files_dir = "../audio_files"
         os.makedirs(audio_files_dir, exist_ok=True)
 
