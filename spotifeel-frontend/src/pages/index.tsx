@@ -28,7 +28,7 @@ export default function Home() {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("username", username);
-
+    console.log(file, username);
     try {
       const response = await axios.post<PlaylistResponse>(
         "http://localhost:5000/api/audio",
@@ -46,17 +46,22 @@ export default function Home() {
   };
 
   return (
-    <div>
-      <h1>Spotifeel</h1>
-      <form onSubmit={handleSubmit}>
-        <input type="file" onChange={handleFileChange} />
+    <div className="w-screen h-screen flex flex-col justify-center items-center bg-green-500 gap-5">
+      <h1 className="text-4xl text-neutral-100 font-poppins">Spotifeel</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <input
+          type="file"
+          className="file-input file-input-bordered w-full max-w-xs"
+        />
         <input
           type="text"
-          value={username}
-          onChange={handleUsernameChange}
           placeholder="Username"
+          className="input input-bordered w-full max-w-xs"
+          onChange={handleUsernameChange}
         />
-        <button type="submit">Upload and Generate Playlist</button>
+        <button className="btn" type="submit">
+          Generate Playlist
+        </button>
       </form>
       {playlist && (
         <div>
