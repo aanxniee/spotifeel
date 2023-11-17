@@ -47,9 +47,15 @@ export default function Home() {
     }
   };
 
-  const extractPlaylistId = (uri: string) => {
-    const parts = uri.split(":");
-    return parts[parts.length - 1];
+  const createEmbedUrl = (uri: string) => {
+    const playlistIdMatch = uri.match(/playlist\/([a-zA-Z0-9]+)/);
+    if (playlistIdMatch && playlistIdMatch[1]) {
+      const playlistId = playlistIdMatch[1];
+      return `https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator`;
+    } else {
+      console.error("Invalid Spotify URL");
+      return null;
+    }
   };
 
   return (
@@ -71,9 +77,23 @@ export default function Home() {
       )}
       {playlist && (
         <div className="mt-5 flex flex-col justify-center items-center gap-3 text-neutral-100 font-poppins">
-          <h2 className="text-2xl">Generated Playlist</h2>
+          <h2 className="text-xl italic">
+            . . . here is the playlist we curated for you . . .
+          </h2>
           <p className="text-xl">Mood: {playlist.result}</p>
-          <p className="text-xl">Playlist: {playlist.uri}</p>
+          <iframe
+            src={
+              playlist && playlist.uri
+                ? createEmbedUrl(playlist.uri) || undefined
+                : undefined
+            }
+            width="100%"
+            height="352"
+            frameBorder="0"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            className="rounded-xl"
+          ></iframe>
         </div>
       )}
     </div>
