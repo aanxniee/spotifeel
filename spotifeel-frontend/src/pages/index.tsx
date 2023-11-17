@@ -23,6 +23,7 @@ export default function Home() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     if (!file) return;
 
     const formData = new FormData();
@@ -51,7 +52,8 @@ export default function Home() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <input
           type="file"
-          className="file-input file-input-bordered w-full max-w-xs"
+          className="mt-5 file-input file-input-bordered w-full max-w-xs"
+          onChange={handleFileChange}
         />
         <input
           type="text"
@@ -64,10 +66,10 @@ export default function Home() {
         </button>
       </form>
       {playlist && (
-        <div>
-          <h2>Generated Playlist</h2>
-          <p>Mood: {playlist.result}</p>
-          <p>
+        <div className="mt-5 flex flex-col justify-center items-center gap-3 text-neutral-100 font-poppins">
+          <h2 className="text-2xl">Generated Playlist</h2>
+          <p className="text-xl">Mood: {playlist.result}</p>
+          <p className="text-xl">
             Playlist URL:{" "}
             <a href={playlist.uri} target="_blank" rel="noopener noreferrer">
               {playlist.uri}
