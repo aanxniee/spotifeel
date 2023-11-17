@@ -10,6 +10,7 @@ type PlaylistResponse = {
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [playlist, setPlaylist] = useState<PlaylistResponse | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const token = getAccessToken();
   console.log(token);
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -23,6 +24,7 @@ export default function Home() {
 
     if (!file || !token) return;
 
+    setIsLoading(true);
     const formData = new FormData();
     formData.append("file", file);
 
@@ -40,6 +42,8 @@ export default function Home() {
       setPlaylist(response.data);
     } catch (error) {
       console.error("Error uploading file:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -61,19 +65,15 @@ export default function Home() {
           Generate Playlist
         </button>
       </form>
+
+      {isLoading && (
+        <span className="text-neutral-100 loading loading-dots loading-lg"></span>
+      )}
       {playlist && (
         <div className="mt-5 flex flex-col justify-center items-center gap-3 text-neutral-100 font-poppins">
           <h2 className="text-2xl">Generated Playlist</h2>
           <p className="text-xl">Mood: {playlist.result}</p>
-          <iframe
-            src={`https://open.spotify.com/embed/playlist/${extractPlaylistId(
-              playlist.uri
-            )}`}
-            width="300"
-            height="380"
-            allowTransparency={true}
-            allow="encrypted-media"
-          ></iframe>
+          <p className="text-xl">Playlist: {playlist.uri}</p>
         </div>
       )}
     </div>
