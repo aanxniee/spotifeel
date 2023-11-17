@@ -15,7 +15,13 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 def main():
 
     print("POST request received")
-    print(request.files)
+    token = request.headers.get('Authorization')
+    if token:
+        token = token.replace('Bearer ', '')
+    else:
+        return jsonify({"error": "No token provided"}), 401
+
+    sp = playlist_generator.authenticate_token(token)
 
     if "file" not in request.files:
         return jsonify({"error": "No file in request"}), 400
@@ -42,11 +48,6 @@ def main():
             audio_data=audio_data, sample_rate=sample_rate, mfcc=True, chroma=True, mel=True)
 
         mood = emotion_detector.predict_mood(audio_features)
-
-        username = request.form['username']
-
-        playlist_generator.create_token(username)
-        sp = playlist_generator.authenticate_token()
 
         playlist = playlist_generator.create_playlist(sp, mood)
 

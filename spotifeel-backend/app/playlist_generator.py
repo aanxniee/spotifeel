@@ -10,27 +10,15 @@ import concurrent.futures
 
 load_dotenv()
 
-client_id = os.getenv("SPOTIFY_CLIENT_ID")
-client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
-redirect_uri = "http://localhost"
 
-
-def create_token(username):
-    scope = "user-library-read user-top-read playlist-modify-public user-follow-read"
-    token = util.prompt_for_user_token(
-        username, scope, client_id=client_id, client_secret=client_secret, redirect_uri=redirect_uri)
-    os.environ['SPOTIFY_TOKEN'] = token
-
-
-def authenticate_token():
-    if os.getenv("SPOTIFY_TOKEN"):
-        token = os.getenv("SPOTIFY_TOKEN")
-        print('-----Connected to Spotify-----')
+def authenticate_token(token):
+    try:
         sp = spotipy.Spotify(auth=token)
+        print('-----Connected to Spotify-----')
         return sp
-    else:
-        print('-----Error Connecting to Spotify-----')
-        sys.exit(1)
+    except Exception as e:
+        print(f'-----Error Connecting to Spotify: {e}-----')
+        return None
 
 
 def analyze_top_artists(sp):
