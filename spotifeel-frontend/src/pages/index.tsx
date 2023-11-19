@@ -42,6 +42,8 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [playlist, setPlaylist] = useState<PlaylistResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const token = getAccessToken();
   console.log(token);
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -52,6 +54,9 @@ export default function Home() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    setErrorMessage(null);
+    setPlaylist(null);
 
     if (!file || !token) return;
 
@@ -73,6 +78,9 @@ export default function Home() {
       setPlaylist(response.data);
     } catch (error) {
       console.error("Error uploading file:", error);
+      setErrorMessage(
+        ". . . audio file could not be read. please ensure the file is in PCM WAV format and is not corrupted . . ."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -84,6 +92,7 @@ export default function Home() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <input
           type="file"
+          accept=".wav"
           className="mt-5 file-input text-neutral-100 file-input-bordered w-full max-w-xs"
           onChange={handleFileChange}
         />
@@ -95,7 +104,12 @@ export default function Home() {
       {isLoading && (
         <span className="text-neutral-100 loading loading-dots loading-lg"></span>
       )}
-      {playlist && (
+      {errorMessage && (
+        <div className="text-lg font-poppins text-neutral-100 italic mt-2">
+          {errorMessage}
+        </div>
+      )}
+      {!isLoading && !errorMessage && playlist && (
         <div className="mt-5 flex flex-col justify-center items-center gap-2 text-neutral-100 font-poppins">
           <h2 className="text-xl italic">
             . . . here is the playlist we curated for you . . .
@@ -108,7 +122,7 @@ export default function Home() {
                 : undefined
             }
             width="100%"
-            height="600"
+            height="400"
             frameBorder="0"
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
             loading="lazy"
