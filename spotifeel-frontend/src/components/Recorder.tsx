@@ -16,7 +16,7 @@ export const Recorder: React.FC<RecorderProps> = ({
   onGeneratePlaylist,
 }) => {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col mt-5 gap-5">
       <div className="flex flex-row gap-5">
         <button
           className="btn text-neutral-100"

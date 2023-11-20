@@ -31,6 +31,13 @@ export default function Home() {
     setPlaylist(null);
   };
 
+  const resetToSelectionScreen = () => {
+    setPlaylist(null);
+    setUserChoice(null);
+    setFile(null);
+    setErrorMessage(null);
+  };
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFile(e.target.files[0]);
@@ -62,7 +69,9 @@ export default function Home() {
       setPlaylist(response.data);
     } catch (error) {
       console.error("Error uploading file:", error);
-      setErrorMessage("An error occurred while generating the playlist.");
+      setErrorMessage(
+        ". . . an error occurred while generating the playlist . . ."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -99,18 +108,26 @@ export default function Home() {
       setPlaylist(response.data);
     } catch (error) {
       console.error("Error uploading recorded audio:", error);
-      setErrorMessage("An error occurred while generating the playlist.");
+      setErrorMessage(
+        ". . . an error occurred while generating the playlist . . ."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col justify-center items-center gap-5">
-      <h1 className="text-4xl text-neutral-100">Spotifeel</h1>
+    <div className="flex flex-col justify-center items-center gap-5 px-4 md:px-8 lg:px-12">
+      <h1 className="text-2xl md:text-3xl lg:text-4xl text-neutral-100">
+        Spotifeel
+      </h1>
 
-      {!userChoice && (
-        <div className="choice-buttons flex flex-row gap-5">
+      {!playlist && !userChoice && (
+        <div
+          className={`choice-buttons ${
+            userChoice ? "hidden" : "flex"
+          } flex-col md:flex-row gap-5`}
+        >
           <button
             className="btn text-neutral-100"
             onClick={() => handleUserChoice("upload")}
@@ -126,11 +143,11 @@ export default function Home() {
         </div>
       )}
 
-      {userChoice === "upload" && (
+      {userChoice === "upload" && !playlist && (
         <UploadForm onFileChange={handleFileChange} onSubmit={handleSubmit} />
       )}
 
-      {userChoice === "record" && (
+      {userChoice === "record" && !playlist && (
         <Recorder
           onStartRecording={startRecording}
           onStopRecording={stopRecording}
@@ -141,7 +158,7 @@ export default function Home() {
       )}
 
       {isLoading && (
-        <span className="text-neutral-100 loading loading-dots loading-lg"></span>
+        <span className="text-neutral-100 pt-10 loading loading-dots loading-lg"></span>
       )}
 
       {errorMessage && (
@@ -151,7 +168,15 @@ export default function Home() {
       )}
 
       {!isLoading && !errorMessage && playlist && (
-        <Playlist playlist={playlist} />
+        <>
+          <Playlist playlist={playlist} />
+          <button
+            className="btn text-neutral-100"
+            onClick={resetToSelectionScreen}
+          >
+            Go Again!
+          </button>
+        </>
       )}
     </div>
   );
