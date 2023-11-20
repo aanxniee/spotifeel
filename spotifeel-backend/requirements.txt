@@ -9,3 +9,4 @@ soundfile==0.12.1
 SpeechRecognition==3.10.0
 spotipy==2.23.0
 Werkzeug==3.0.1
+pydub==0.25.1

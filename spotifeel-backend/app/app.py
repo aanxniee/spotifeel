@@ -6,6 +6,7 @@ import librosa as lb
 from werkzeug.utils import secure_filename
 import emotion_detector
 import playlist_generator
+from pydub import AudioSegment
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -35,23 +36,32 @@ def main():
         audio_files_dir = "../audio_files"
         os.makedirs(audio_files_dir, exist_ok=True)
 
-        filename = os.path.join(
+        original_filename = os.path.join(
             audio_files_dir, secure_filename(file.filename))
-        file.save(filename)
+        file.save(original_filename)
 
-        recognizer = sr.Recognizer()
-        with sr.AudioFile(filename) as source:
-            audio_data = recognizer.record(source)
+        try:
+            webm_audio = AudioSegment.from_file(
+                original_filename, format="webm")
+            wav_filename = os.path.splitext(original_filename)[0] + '.wav'
+            webm_audio.export(wav_filename, format="wav")
 
-        audio_data, sample_rate = lb.load(filename, sr=None)
-        audio_features = emotion_detector.extract_audio_features(
-            audio_data=audio_data, sample_rate=sample_rate, mfcc=True, chroma=True, mel=True)
+            recognizer = sr.Recognizer()
+            with sr.AudioFile(wav_filename) as source:
+                audio_data = recognizer.record(source)
 
-        mood = emotion_detector.predict_mood(audio_features)
+            audio_data, sample_rate = lb.load(wav_filename, sr=None)
+            audio_features = emotion_detector.extract_audio_features(
+                audio_data=audio_data, sample_rate=sample_rate, mfcc=True, chroma=True, mel=True)
 
-        playlist = playlist_generator.create_playlist(sp, mood)
+            mood = emotion_detector.predict_mood(audio_features)
+            print(mood)
 
-        return jsonify({"result": mood, "uri": playlist}), 200
+            playlist = playlist_generator.create_playlist(sp, mood)
+
+            return jsonify({"result": mood, "uri": playlist}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
