@@ -41,18 +41,28 @@ def main():
         file.save(original_filename)
 
         try:
-            webm_audio = AudioSegment.from_file(
-                original_filename, format="webm")
-            wav_filename = os.path.splitext(original_filename)[0] + '.wav'
-            webm_audio.export(wav_filename, format="wav")
 
+            file_extension = os.path.splitext(file.filename)[1].lower()
+
+            if file_extension == '.webm':
+                webm_audio = AudioSegment.from_file(
+                    original_filename, format="webm")
+                wav_filename = os.path.splitext(original_filename)[0] + '.wav'
+                webm_audio.export(wav_filename, format="wav")
+                audio_file = wav_filename
+            elif file_extension == '.wav':
+                audio_file = original_filename
+            else:
+                return jsonify({"error": "Unsupported file format"}), 400
+
+            print(audio_file)
             recognizer = sr.Recognizer()
-            with sr.AudioFile(wav_filename) as source:
+            with sr.AudioFile(audio_file) as source:
                 audio_data = recognizer.record(source)
 
-            audio_data, sample_rate = lb.load(wav_filename, sr=None)
+            audio_data, sample_rate = lb.load(audio_file, sr=None)
             audio_features = emotion_detector.extract_audio_features(
-                audio_data=audio_data, sample_rate=sample_rate, mfcc=True, chroma=True, mel=True)
+                audio_data, sample_rate, mfcc=True, chroma=True, mel=True)
 
             mood = emotion_detector.predict_mood(audio_features)
             print(mood)
