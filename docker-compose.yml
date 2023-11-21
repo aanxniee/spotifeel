@@ -1,0 +1,12 @@
+version: '1.0'
+services:
+  backend:
+    build: ./spotifeel-backend
+    ports:
+      - "5000:5000"
+  frontend:
+    build: ./spotifeel-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
