@@ -124,6 +124,8 @@ def main():
     plt.ylabel('True')
     plt.show()
 
+    exit(0)
+
 
 if __name__ == '__main__':
     main()
